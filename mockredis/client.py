@@ -512,7 +512,10 @@ class MockRedis(object):
         """Emulate hget."""
 
         redis_hash = self._get_hash(hashkey, 'HGET')
-        return redis_hash.get(self._encode(attribute))
+        value = redis_hash.get(self._encode(attribute))
+        if self.decode_responses and isinstance(value, bytes):
+            value = value.decode()
+        return value
 
     def hgetall(self, hashkey):
         """Emulate hgetall."""
