@@ -62,6 +62,11 @@ class MockRedis(object):
         # Dictionary from script to sha ''Script''
         self.shas = dict()
 
+    def decode(self, value):
+        if self.decode_responses and isinstance(value, bytes):
+            value = value.decode()
+        return value
+
     @classmethod
     def from_url(cls, url, db=None, **kwargs):
         return cls(**kwargs)
@@ -297,9 +302,7 @@ class MockRedis(object):
     def get(self, key):
         key = self._encode(key)
         value = self.redis.get(key)
-        if self.decode_responses and isinstance(value, bytes):
-            value = value.decode()
-        return value
+        return self.decode(value)
 
     def __getitem__(self, name):
         """
@@ -512,10 +515,7 @@ class MockRedis(object):
         """Emulate hget."""
 
         redis_hash = self._get_hash(hashkey, 'HGET')
-        value = redis_hash.get(self._encode(attribute))
-        if self.decode_responses and isinstance(value, bytes):
-            value = value.decode()
-        return value
+        return self.decode(redis_hash.get(self._encode(attribute)))
 
     def hgetall(self, hashkey):
         """Emulate hgetall."""
@@ -1029,7 +1029,7 @@ class MockRedis(object):
 
     def smembers(self, name):
         """Emulate smembers."""
-        return self._get_set(name, 'SMEMBERS').copy()
+        return map(self.decode, self._get_set(name, 'SMEMBERS').copy())
 
     def smove(self, src, dst, value):
         """Emulate smove."""
